@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Startup script handle the initialisation of IPVS
+# Startup script handle the initialisation of LVS
 #
 # chkconfig: - 08 92
 #
@@ -11,24 +11,44 @@
 #
 # Based on init script for ipchains by Joshua Jensen <joshua@redhat.com>
 #
+# Changes:
+#	Wenzhuo Zhang		:	fixed the typo of failure function 
+#
 # config: /etc/sysconfig/ipvsadm
+# config: /etc/ipvsadm.rules
 
 
-IPVSADM_CONFIG=/etc/sysconfig/ipvsadm
-
-# Exit silently if there is no configuration file
-if [ ! -f $IPVSADM_CONFIG ]; then
-  exit
+# set the configuration file
+if [ -f "/etc/sysconfig/ipvsadm"  ]; then
+  IPVSADM_CONFIG="/etc/sysconfig/ipvsadm"
+elif [ -f "/etc/ipvsadm.rules"  ]; then
+  IPVSADM_CONFIG="/etc/ipvsadm.rules"
+else
+  IPVSADM_CONFIG="/etc/sysconfig/ipvsadm"
 fi
 
-# Use the funtions provided by Red Hat
-# This should be made distribution agnostic
-. /etc/rc.d/init.d/functions
+# Use the funtions provided by Red Hat or use our own
+if [ -f /etc/rc.d/init.d/functions ]
+then
+  . /etc/rc.d/init.d/functions
+else
+  function action {
+    echo "$1"
+    shift
+    $@
+  }
+  function success {
+    echo -n "Success"
+  }
+  function failure {
+    echo -n "Failed"
+  }
+fi
 
 # Check for ipvsadm in both /sbin and /usr/sbin
 # The default install puts it in /sbin, as it is analogos to commands such
 # as route and ipchains that live in /sbin.  Some vendors, most notibly 
-# Red Hat insist on movint it to /usr/sbin
+# Red Hat insist on moving it to /usr/sbin
 if [ ! -x /sbin/ipvsadm -a  ! -x /usr/sbin/ipvsadm ]; then
     exit 0
 fi
@@ -39,7 +59,7 @@ case "$1" in
     #  pre-existing rules.
     action "Clearing the current IPVS table:" ipvsadm -C
     echo -n "Applying IPVS configuration: "
-      grep -v "^#" $IPVSADM_CONFIG | ipvsadm-restore -p -f && \
+      ipvsadm-restore < "$IPVSADM_CONFIG" && \
       success "Applying IPVS configuration" || \
       failure "Applying IPVS configuration"
     echo
@@ -51,7 +71,7 @@ case "$1" in
 	rm -f /var/lock/subsys/ipvsadm
 	;;
 
-  restart)
+  reload|reload-force|restart)
 	#Start should flush everything
 	$0 start
 	;;
@@ -68,14 +88,15 @@ case "$1" in
 
   save)
 	echo -n "Saving IPVS table to $IPVSADM_CONFIG: "
-	ipvsadm-save > $IPVSADM_CONFIG  2>/dev/null && \
+	ipvsadm-save -n > $IPVSADM_CONFIG  2>/dev/null && \
 	  success "Saving IPVS table to $IPVSADM_CONFIG" || \
 	  failure "Saving IPVS table to $IPVSADM_CONFIG"
         echo
 	;;
 
   *)
-	echo "Usage: $0 {start|stop|restart|status|panic|save}"
+	echo "Usage: ipvsadm
+	  {start|stop|restart|status|panic|save|reload|reload-force}"
 	exit 1
 esac
 

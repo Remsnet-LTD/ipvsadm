@@ -1,13 +1,13 @@
 --------------------------------------------------------------------------
 
-ipvsadm - Version 1.20 - 18th September 2001
+ipvsadm - Version 1.14 - 11th January 2001
 
 This is free software.  See below for details.
 
 ipvsadm is a utility to administer the IP virtual server services
 offered by the Linux kernel with IP virtual server support.
 
-This version of ipvsadm requires IPVS module v0.9.7 for kernel 2.4 or
+This version of ipvsadm requires IPVS module v0.0.5 for kernel 2.4 or
 later.  Check out the Linux Virtual Server Project home page on the
 World Wide Web:
 	http://www.LinuxVirtualServer.org/
@@ -23,12 +23,7 @@ in the source directory.
 
 Install to your liking.  We suggest the following pathnames:
 	/sbin/ipvsadm
-	/sbin/ipvsadm-save
-	/sbin/ipvsadm-restore
 	/usr/man/man8/ipvsadm.8
-	/usr/man/man8/ipvsadm-save.8
-	/usr/man/man8/ipvsadm-restore.8
-	/etc/rc.d/init.d/ipvsadm
 This will be done automatically when calling
 	make install
 in the source directory.
