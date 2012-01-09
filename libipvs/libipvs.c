@@ -124,6 +124,8 @@ int ipvs_init(void)
 	ipvs_func = ipvs_init;
 
 #ifdef LIBIPVS_USE_NL
+	try_nl = 1;
+
 	if (ipvs_nl_send_message(NULL, NULL, NULL) == 0) {
 		try_nl = 1;
 		return ipvs_getinfo();
