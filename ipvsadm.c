@@ -1631,16 +1631,19 @@ void list_timeout(void)
 static void list_daemon(void)
 {
 	ipvs_daemon_t *u;
+	int i;
 
 	if (!(u = ipvs_get_daemon()))
 		exit(1);
 
-	if (u[0].state & IP_VS_STATE_MASTER)
-		printf("master sync daemon (mcast=%s, syncid=%d)\n",
-		       u[0].mcast_ifn, u[0].syncid);
-	if (u[1].state & IP_VS_STATE_BACKUP)
-		printf("backup sync daemon (mcast=%s, syncid=%d)\n",
-		       u[1].mcast_ifn, u[1].syncid);
+	for (i = 0; i < 2; i++) {
+		if (u[i].state & IP_VS_STATE_MASTER)
+			printf("master sync daemon (mcast=%s, syncid=%d)\n",
+			       u[i].mcast_ifn, u[i].syncid);
+		if (u[i].state & IP_VS_STATE_MASTER)
+			printf("master sync daemon (mcast=%s, syncid=%d)\n",
+			       u[i].mcast_ifn, u[i].syncid);
+	}
 	free(u);
 }
 
