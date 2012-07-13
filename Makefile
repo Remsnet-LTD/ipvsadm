@@ -72,6 +72,21 @@ POPT_LIB = $(shell for i in $(LIB_SEARCH); do \
     fi; \
   fi; \
 done)
+ifeq (,$(POPT_LIB))
+POPT_LIB = $(shell for i in $(LIB_SEARCH); do \
+  f1=""; \
+  for so in $$i/libpopt.so*; do \
+    if [ -f $$so ]; then \
+      if objdump -T $$so | fgrep -q poptGetContext; then \
+	  echo "-lpopt"; \
+	  f1=y; \
+	  break; \
+      fi; \
+    fi; \
+  done; \
+  [ "$$f1" != "" ] && break; \
+done)
+endif
 endif
 
 ifneq (,$(POPT_LIB))
