@@ -62,39 +62,8 @@ RPMBUILD = $(shell				\
 		echo "/bin/rpm";		\
 	fi )
 
-ifeq (,$(FORCE_GETOPT))
-LIB_SEARCH = /lib64 /usr/lib64 /usr/local/lib64 /lib /usr/lib /usr/local/lib
-POPT_LIB = $(shell for i in $(LIB_SEARCH); do \
-  if [ -f $$i/libpopt.a ]; then \
-    if nm $$i/libpopt.a | fgrep -q poptGetContext; then \
-	echo "-lpopt"; \
-	break; \
-    fi; \
-  fi; \
-done)
-ifeq (,$(POPT_LIB))
-POPT_LIB = $(shell for i in $(LIB_SEARCH); do \
-  f1=""; \
-  for so in $$i/libpopt.so*; do \
-    if [ -f $$so ]; then \
-      if objdump -T $$so | fgrep -q poptGetContext; then \
-	  echo "-lpopt"; \
-	  f1=y; \
-	  break; \
-      fi; \
-    fi; \
-  done; \
-  [ "$$f1" != "" ] && break; \
-done)
-endif
-endif
-
-ifneq (,$(POPT_LIB))
-POPT_DEFINE = -DHAVE_POPT
-endif
-
 OBJS		= ipvsadm.o config_stream.o dynamic_array.o
-LIBS		= $(POPT_LIB)
+LIBS		= -lpopt
 ifneq (0,$(HAVE_NL))
 LIBS		+= -lnl
 endif
