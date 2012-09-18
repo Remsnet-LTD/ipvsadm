@@ -726,8 +726,8 @@ ipvs_sort_services(struct ip_vs_get_services *s, ipvs_service_cmp_t f)
 static int ipvs_dests_parse_cb(struct nl_msg *msg, void *arg)
 {
 	struct nlmsghdr *nlh = nlmsg_hdr(msg);
-	struct nlattr *attrs[IPVS_DEST_ATTR_MAX + 1];
-	struct nlattr *dest_attrs[IPVS_SVC_ATTR_MAX + 1];
+	struct nlattr *attrs[IPVS_CMD_ATTR_MAX + 1];
+	struct nlattr *dest_attrs[IPVS_DEST_ATTR_MAX + 1];
 	struct ip_vs_get_dests **dp = (struct ip_vs_get_dests **)arg;
 	struct ip_vs_get_dests *d = (struct ip_vs_get_dests *)*dp;
 	int i = d->num_dests;
