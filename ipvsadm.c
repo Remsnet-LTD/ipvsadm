@@ -1487,7 +1487,7 @@ print_service_entry(ipvs_service_entry_t *se, unsigned int format)
 		if (se->pe_name[0])
 			printf(" pe %s", se->pe_name);
 		if (se->flags & IP_VS_SVC_F_ONEPACKET)
-			printf(" ops");
+			printf(" -o");
 	} else if (format & FMT_STATS) {
 		printf("%-33s", svc_name);
 		print_largenum(se->stats.conns, format);
