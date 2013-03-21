@@ -1517,9 +1517,9 @@ print_service_entry(ipvs_service_entry_t *se, unsigned int format)
 					printf(" mask %i", se->netmask);
 			if (se->pe_name[0])
 				printf(" pe %s", se->pe_name);
-			if (se->flags & IP_VS_SVC_F_ONEPACKET)
-				printf(" ops");
 		}
+		if (se->flags & IP_VS_SVC_F_ONEPACKET)
+			printf(" ops");
 	}
 	printf("\n");
 
