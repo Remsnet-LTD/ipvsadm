@@ -65,7 +65,13 @@ RPMBUILD = $(shell				\
 OBJS		= ipvsadm.o config_stream.o dynamic_array.o
 LIBS		= -lpopt
 ifneq (0,$(HAVE_NL))
-LIBS		+= -lnl
+LIBS		+= $(shell \
+		if which pkg-config > /dev/null 2>&1; then \
+		  if   pkg-config --libs libnl-genl-3.0  2> /dev/null; then :;\
+		  elif pkg-config --libs libnl-2.0       2> /dev/null; then :;\
+		  elif pkg-config --libs libnl-1         2> /dev/null; then :;\
+		  fi; \
+		else echo "-lnl"; fi)
 endif
 DEFINES		= -DVERSION=\"$(VERSION)\" -DSCHEDULERS=\"$(SCHEDULERS)\" \
 		  -DPE_LIST=\"$(PE_LIST)\" $(POPT_DEFINE)

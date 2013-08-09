@@ -4,6 +4,13 @@ CC		= gcc
 CFLAGS		= -Wall -Wunused -Wstrict-prototypes -g -fPIC
 ifneq (0,$(HAVE_NL))
 CFLAGS		+= -DLIBIPVS_USE_NL
+CFLAGS		+= $(shell \
+		if which pkg-config > /dev/null 2>&1; then \
+		  if   pkg-config --cflags libnl-3.0  2> /dev/null; then :; \
+		  elif pkg-config --cflags libnl-2.0  2> /dev/null; then :; \
+		  elif pkg-config --cflags libnl-1    2> /dev/null; then :; \
+		  fi; \
+		fi)
 endif
 
 INCLUDE		+= $(shell if [ -f ../../ip_vs.h ]; then	\
