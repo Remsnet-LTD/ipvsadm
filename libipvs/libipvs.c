@@ -32,6 +32,11 @@ static void* ipvs_func = NULL;
 struct ip_vs_getinfo ipvs_info;
 
 #ifdef LIBIPVS_USE_NL
+#ifdef FALLBACK_LIBNL1
+#define nl_sock         nl_handle
+#define nl_socket_alloc nl_handle_alloc
+#define nl_socket_free  nl_handle_destroy
+#endif
 static struct nl_sock *sock = NULL;
 static int family, try_nl = 1;
 #endif

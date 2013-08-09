@@ -10,6 +10,11 @@ INCLUDE		+= $(shell if [ -f ../../ip_vs.h ]; then	\
 		     echo "-I../../."; fi;)
 DEFINES		= $(shell if [ ! -f ../../ip_vs.h ]; then	\
 		    echo "-DHAVE_NET_IP_VS_H"; fi;)
+DEFINES		+= $(shell if which pkg-config > /dev/null 2>&1; then \
+			 if   pkg-config --exists libnl-3.0; then :; \
+			 elif pkg-config --exists libnl-2.0; then :; \
+			 elif pkg-config --exists libnl-1; \
+			 then echo "-DFALLBACK_LIBNL1"; fi; fi)
 
 .PHONY		= all clean install dist distclean rpm rpms
 STATIC_LIB	= libipvs.a
