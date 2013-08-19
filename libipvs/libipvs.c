@@ -45,7 +45,7 @@ static int family, try_nl = 1;
 	{ errno = EAFNOSUPPORT; return ret; }			\
 	s->__addr_v4 = s->addr.ip;				\
 
-#define CHECK_PE(s, ret) if (s->pe_name)			\
+#define CHECK_PE(s, ret) if (s->pe_name[0])			\
 	{ errno = EAFNOSUPPORT; return ret; }
 
 #define CHECK_COMPAT_DEST(s, ret) CHECK_IPV4(s, ret)
@@ -234,7 +234,7 @@ static int ipvs_nl_fill_service_attr(struct nl_msg *msg, ipvs_service_t *svc)
 	}
 
 	NLA_PUT_STRING(msg, IPVS_SVC_ATTR_SCHED_NAME, svc->sched_name);
-	if (svc->pe_name)
+	if (svc->pe_name[0])
 		NLA_PUT_STRING(msg, IPVS_SVC_ATTR_PE_NAME, svc->pe_name);
 	NLA_PUT(msg, IPVS_SVC_ATTR_FLAGS, sizeof(flags), &flags);
 	NLA_PUT_U32(msg, IPVS_SVC_ATTR_TIMEOUT, svc->timeout);
