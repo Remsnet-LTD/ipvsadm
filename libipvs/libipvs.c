@@ -930,22 +930,18 @@ ipvs_get_service(__u32 fwmark, __u16 af, __u16 protocol, union nf_inet_addr addr
 	ipvs_service_entry_t *svc;
 	socklen_t len;
 
-	len = sizeof(*svc);
-	if (!(svc = malloc(len)))
-		return NULL;
-
 	ipvs_func = ipvs_get_service;
 
-	svc->fwmark = fwmark;
-	svc->af = af;
-	svc->protocol = protocol;
-	svc->addr = addr;
-	svc->port = port;
 #ifdef LIBIPVS_USE_NL
 	if (try_nl) {
 		struct ip_vs_get_services *get;
 		struct nl_msg *msg;
 		ipvs_service_t tsvc;
+
+		svc = malloc(sizeof(*svc));
+		if (!svc)
+			return NULL;
+
 		tsvc.fwmark = fwmark;
 		tsvc.af = af;
 		tsvc.protocol= protocol;
@@ -977,6 +973,17 @@ ipvs_get_service_err2:
 		return NULL;
 	}
 #endif
+
+	len = sizeof(*svc);
+	svc = calloc(1, len);
+	if (!svc)
+		return NULL;
+
+	svc->fwmark = fwmark;
+	svc->af = af;
+	svc->protocol = protocol;
+	svc->addr = addr;
+	svc->port = port;
 
 	CHECK_COMPAT_SVC(svc, NULL);
 	if (getsockopt(sockfd, IPPROTO_IP, IP_VS_SO_GET_SERVICE,
