@@ -37,7 +37,7 @@ ipvsadm \- Linux Virtual Server administration
 .SH SYNOPSIS
 .B ipvsadm -A|E -t|u|f \fIservice-address\fP [-s \fIscheduler\fP]
 .ti 15
-.B [-p [\fItimeout\fP]] [-M \fInetmask\fP]
+.B [-p [\fItimeout\fP]] [-M \fInetmask\fP] [-b \fIsched-flags\fP]
 .br
 .B ipvsadm -D -t|u|f \fIservice-address\fP
 .br
@@ -248,6 +248,9 @@ addresses.
 .sp
 \fBsh\fR - Source Hashing: assigns jobs to servers through looking up
 a statically assigned hash table by their source IP addresses.
+This scheduler has two flags: sh-fallback, which enables fallback to a
+different server if the selected server was unavailable, and sh-port,
+which adds the source port number to the hash computation.
 .sp
 \fBsed\fR - Shortest Expected Delay: assigns an incoming job to the
 server with the shortest expected delay. The expected delay that the
@@ -285,6 +288,11 @@ granularity is per client host. Less specific netmasks may be used to
 resolve problems with non-persistent cache clusters on the client side.
 IPv6 netmasks should be specified as a prefix length between 1 and 128.
 The default prefix length is 128.
+.TP
+.B -b, --sched-flags \fIsched-flags\fP
+Set scheduler flags for this virtual server.  \fIsched-flags\fP is a
+comma-separated list of flags.  See the scheduler descriptions for
+valid scheduler flags.
 .TP
 .B -r, --real-server \fIserver-address\fP
 Real server that an associated request for service may be assigned to.
