@@ -942,6 +942,7 @@ ipvs_get_service(__u32 fwmark, __u16 af, __u16 protocol, union nf_inet_addr addr
 		if (!svc)
 			return NULL;
 
+		memset(&tsvc, 0, sizeof(tsvc));
 		tsvc.fwmark = fwmark;
 		tsvc.af = af;
 		tsvc.protocol= protocol;
