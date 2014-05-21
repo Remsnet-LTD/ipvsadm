@@ -1733,8 +1733,8 @@ static void list_daemon(void)
 		if (u[i].state & IP_VS_STATE_MASTER)
 			printf("master sync daemon (mcast=%s, syncid=%d)\n",
 			       u[i].mcast_ifn, u[i].syncid);
-		if (u[i].state & IP_VS_STATE_MASTER)
-			printf("master sync daemon (mcast=%s, syncid=%d)\n",
+		if (u[i].state & IP_VS_STATE_BACKUP)
+			printf("backup sync daemon (mcast=%s, syncid=%d)\n",
 			       u[i].mcast_ifn, u[i].syncid);
 	}
 	free(u);
