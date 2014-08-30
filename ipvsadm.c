@@ -788,6 +788,12 @@ static int process_options(int argc, char **argv, int reading_stdin)
 		    (ce.dest.conn_flags == IP_VS_CONN_F_TUNNEL
 		     || ce.dest.conn_flags == IP_VS_CONN_F_DROUTE))
 			ce.dest.port = ce.svc.port;
+
+		/* Tunneling allows different address family */
+		if (ce.dest.af != ce.svc.af &&
+		    ce.dest.conn_flags != IP_VS_CONN_F_TUNNEL)
+			fail(2, "Different address family is allowed only "
+			     "for tunneling servers");
 	}
 
 	switch (ce.cmd) {
