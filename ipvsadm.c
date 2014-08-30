@@ -1296,6 +1296,7 @@ static void print_conn(char *buf, unsigned int format)
 	char            state[16];
 	unsigned int    expires;
 	unsigned short  af = AF_INET;
+	unsigned short  daf = AF_INET;
 	char		pe_name[IP_VS_PENAME_MAXLEN];
 	char		pe_data[IP_VS_PEDATA_MAXLEN];
 
@@ -1320,22 +1321,24 @@ static void print_conn(char *buf, unsigned int format)
 
 	if (inet_pton(AF_INET6, temp1, &caddr.in6) > 0) {
 		inet_pton(AF_INET6, temp2, &vaddr.in6);
-		inet_pton(AF_INET6, temp3, &daddr.in6);
 		af = AF_INET6;
 	} else if (inet_pton(AF_INET, temp1, &caddr.ip) > 0) {
 		inet_pton(AF_INET, temp2, &vaddr.ip);
-		inet_pton(AF_INET, temp3, &daddr.ip);
 	} else {
 		caddr.ip = (__u32) htonl(strtoul(temp1, NULL, 16));
 		vaddr.ip = (__u32) htonl(strtoul(temp2, NULL, 16));
-		daddr.ip = (__u32) htonl(strtoul(temp3, NULL, 16));
 	}
+
+	if (inet_pton(AF_INET6, temp3, &daddr.in6) > 0)
+		daf = AF_INET6;
+	else if (inet_pton(AF_INET, temp3, &daddr.ip) <= 0)
+		daddr.ip = (__u32) htonl(strtoul(temp3, NULL, 16));
 
 	if (!(cname = addrport_to_anyname(af, &caddr, cport, proto, format)))
 		exit(1);
 	if (!(vname = addrport_to_anyname(af, &vaddr, vport, proto, format)))
 		exit(1);
-	if (!(dname = addrport_to_anyname(af, &daddr, dport, proto, format)))
+	if (!(dname = addrport_to_anyname(daf, &daddr, dport, proto, format)))
 		exit(1);
 
 	seconds = expires % 60;
