@@ -1638,7 +1638,7 @@ print_service_entry(ipvs_service_entry_t *se, unsigned int format)
 			fprintf(stderr, "addrport_to_anyname fails\n");
 			exit(1);
 		}
-		if (!(format & FMT_RULE) && (se->af != AF_INET6))
+		if (!(format & FMT_RULE) && (e->af != AF_INET6))
 			dname[28] = '\0';
 
 		if (format & FMT_RULE) {
