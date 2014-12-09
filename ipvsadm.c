@@ -1437,15 +1437,15 @@ static inline char *fwd_switch(unsigned flags)
 
 static void print_largenum(unsigned long long i, unsigned int format)
 {
-	char mytmp[32];
-	size_t len;
-
 	if (format & FMT_EXACT) {
+		char mytmp[32];
+		int len;
+
 		len = snprintf(mytmp, 32, "%llu", i);
 		printf("%*llu", len <= 8 ? 9 : len + 1, i);
 		return;
 	}
-	
+
 	if (i < 100000000)			/* less than 100 million */
 		printf("%9llu", i);
 	else if (i < 1000000000)		/* less than 1 billion */
