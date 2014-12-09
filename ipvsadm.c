@@ -1255,7 +1255,7 @@ static int modprobe_ipvs(void)
 
 	rc = waitpid(child, &status, 0);
 
-	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
+	if (rc == -1 || !WIFEXITED(status) || WEXITSTATUS(status)) {
 		return 1;
 	}
 
