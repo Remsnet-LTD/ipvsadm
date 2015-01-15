@@ -1770,8 +1770,14 @@ static char * addr_to_host(int af, const void *addr)
 {
 	struct hostent *host;
 
-	if ((host = gethostbyaddr((char *) addr,
-				  sizeof(struct in_addr), af)) != NULL)
+	if (af == AF_INET)
+		host = gethostbyaddr((char *) addr,
+				     sizeof(struct in_addr), af);
+	else
+		host = gethostbyaddr((char *) addr,
+				     sizeof(struct in6_addr), af);
+
+	if (host != NULL)
 		return (char *) host->h_name;
 	else
 		return (char *) NULL;
