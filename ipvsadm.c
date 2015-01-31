@@ -287,6 +287,7 @@ enum {
 	TAG_SORT,
 	TAG_NO_SORT,
 	TAG_PERSISTENCE_ENGINE,
+	TAG_SCTP_SERVICE,
 };
 
 /* various parsing helpers & parsing functions */
@@ -359,6 +360,47 @@ int main(int argc, char **argv)
 	return result;
 }
 
+static int option_to_protocol(int opt)
+{
+	switch (opt) {
+	case 't':
+		return IPPROTO_TCP;
+	case 'u':
+		return IPPROTO_UDP;
+	case TAG_SCTP_SERVICE:
+		return IPPROTO_SCTP;
+	default:
+		return IPPROTO_IP;
+	}
+}
+
+static char *option_from_protocol(int proto)
+{
+	switch (proto) {
+	case IPPROTO_TCP:
+		return "-t";
+	case IPPROTO_UDP:
+		return "-u";
+	case IPPROTO_SCTP:
+		return "--sctp-service";
+	default:
+		return NULL;
+	}
+}
+
+static char *protocol_name(int proto)
+{
+	switch (proto) {
+	case IPPROTO_TCP:
+		return "TCP";
+	case IPPROTO_UDP:
+		return "UDP";
+	case IPPROTO_SCTP:
+		return "SCTP";
+	default:
+		return "?";
+	}
+}
 
 static int
 parse_options(int argc, char **argv, struct ipvs_command_entry *ce,
@@ -391,6 +433,8 @@ parse_options(int argc, char **argv, struct ipvs_command_entry *ce,
 		  NULL, NULL },
 		{ "udp-service", 'u', POPT_ARG_STRING, &optarg, 'u',
 		  NULL, NULL },
+		{ "sctp-service", '\0', POPT_ARG_STRING, &optarg,
+		  TAG_SCTP_SERVICE, NULL, NULL },
 		{ "fwmark-service", 'f', POPT_ARG_STRING, &optarg, 'f',
 		  NULL, NULL },
 		{ "scheduler", 's', POPT_ARG_STRING, &optarg, 's', NULL, NULL },
@@ -510,9 +554,9 @@ parse_options(int argc, char **argv, struct ipvs_command_entry *ce,
 		switch (c) {
 		case 't':
 		case 'u':
+		case TAG_SCTP_SERVICE:
 			set_option(options, OPT_SERVICE);
-			ce->svc.protocol =
-				(c=='t' ? IPPROTO_TCP : IPPROTO_UDP);
+			ce->svc.protocol = option_to_protocol(c);
 			parse = parse_service(optarg, &ce->svc);
 			if (!(parse & SERVICE_ADDR))
 				fail(2, "illegal virtual server "
@@ -1128,15 +1172,15 @@ static void usage_exit(const char *program, const int exit_status)
 	version(stream);
 	fprintf(stream,
 		"Usage:\n"
-		"  %s -A|E -t|u|f service-address [-s scheduler] [-p [timeout]] [-M netmask] [--pe persistence_engine] [-b sched-flags]\n"
-		"  %s -D -t|u|f service-address\n"
+		"  %s -A|E virtual-service [-s scheduler] [-p [timeout]] [-M netmask] [--pe persistence_engine] [-b sched-flags]\n"
+		"  %s -D virtual-service\n"
 		"  %s -C\n"
 		"  %s -R\n"
 		"  %s -S [-n]\n"
-		"  %s -a|e -t|u|f service-address -r server-address [options]\n"
-		"  %s -d -t|u|f service-address -r server-address\n"
-		"  %s -L|l [options]\n"
-		"  %s -Z [-t|u|f service-address]\n"
+		"  %s -a|e virtual-service -r server-address [options]\n"
+		"  %s -d virtual-service -r server-address\n"
+		"  %s -L|l [virtual-service] [options]\n"
+		"  %s -Z [virtual-service]\n"
 		"  %s --set tcp tcpfin udp\n"
 		"  %s --start-daemon state [--mcast-interface interface] [--syncid sid]\n"
 		"  %s --stop-daemon state\n"
@@ -1166,10 +1210,15 @@ static void usage_exit(const char *program, const int exit_status)
 		);
 
 	fprintf(stream,
+		"virtual-service:\n"
+		"  --tcp-service|-t  service-address   service-address is host[:port]\n"
+		"  --udp-service|-u  service-address   service-address is host[:port]\n"
+		"  --sctp-service    service-address   service-address is host[:port]\n"
+		"  --fwmark-service|-f fwmark          fwmark is an integer greater than zero\n"
+		"\n");
+
+	fprintf(stream,
 		"Options:\n"
-		"  --tcp-service  -t service-address   service-address is host[:port]\n"
-		"  --udp-service  -u service-address   service-address is host[:port]\n"
-		"  --fwmark-service  -f fwmark         fwmark is an integer greater than zero\n"
 		"  --ipv6         -6                   fwmark entry uses IPv6\n"
 		"  --scheduler    -s scheduler         one of " SCHEDULERS ",\n"
 		"                                      the default scheduler is %s.\n"
@@ -1316,6 +1365,8 @@ static void print_conn(char *buf, unsigned int format)
 		proto = IPPROTO_TCP;
 	else if (strcmp(protocol, "UDP") == 0)
 		proto = IPPROTO_UDP;
+	else if (strcmp(protocol, "SCTP") == 0)
+		proto = IPPROTO_SCTP;
 	else
 		proto = 0;
 
@@ -1518,7 +1569,7 @@ static void
 print_service_entry(ipvs_service_entry_t *se, unsigned int format)
 {
 	struct ip_vs_get_dests *d;
-	char svc_name[64];
+	char svc_name[1024];
 	int i;
 
 	if (!(d = ipvs_get_dests(se))) {
@@ -1543,14 +1594,17 @@ print_service_entry(ipvs_service_entry_t *se, unsigned int format)
 		if (!(vname = addrport_to_anyname(se->af, &se->addr, ntohs(se->port),
 						  se->protocol, format)))
 			fail(2, "addrport_to_anyname: %s", strerror(errno));
-		if (format & FMT_RULE)
-			sprintf(svc_name, "%s %s",
-				se->protocol==IPPROTO_TCP?"-t":"-u",
-				vname);
-		else {
-			sprintf(svc_name, "%s  %s",
-				se->protocol==IPPROTO_TCP?"TCP":"UDP",
-				vname);
+		if (format & FMT_RULE) {
+			char *stype = option_from_protocol(se->protocol) ? :
+				      "--xxx-service";
+
+			snprintf(svc_name, sizeof(svc_name), "%s %s",
+				 stype, vname);
+		} else {
+			char *stype = protocol_name(se->protocol);
+
+			snprintf(svc_name, sizeof(svc_name), "%-4s %s",
+				 stype, vname);
 			if (se->af != AF_INET6)
 				svc_name[33] = '\0';
 		}
@@ -1806,6 +1860,9 @@ int service_to_port(const char *name, unsigned short proto)
 	else if (proto == IPPROTO_UDP
 		 && (service = getservbyname(name, "udp")) != NULL)
 		return ntohs((unsigned short) service->s_port);
+	else if (proto == IPPROTO_SCTP
+		 && (service = getservbyname(name, "sctp")) != NULL)
+		return ntohs((unsigned short) service->s_port);
 	else
 		return -1;
 }
@@ -1820,6 +1877,9 @@ static char * port_to_service(unsigned short port, unsigned short proto)
 		return service->s_name;
 	else if (proto == IPPROTO_UDP &&
 		 (service = getservbyport(htons(port), "udp")) != NULL)
+		return service->s_name;
+	else if (proto == IPPROTO_SCTP &&
+		 (service = getservbyport(htons(port), "sctp")) != NULL)
 		return service->s_name;
 	else
 		return (char *) NULL;
